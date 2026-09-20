@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Serverless Data Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 GitHub Pages Serverless Data Manager</h1>
+    <p>GitHub REST API ব্যবহার করে সরাসরি Repo-তে ফাইল তৈরি, এডিট ও ডিলিট করুন।</p>
+
+    <!-- Configuration Card -->
+    <div class="card">
+      <h3>🔑 GitHub Configuration</h3>
+      <div class="form-group">
+        <label for="token">Personal Access Token (PAT):</label>
+        <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxxxxxxx" required>
+        <small>নোট: টোকেনে <code>repo</code> স্কোপ থাকতে হবে। টোকেনটি শুধু আপনার ব্রাউজারে সুরক্ষিত থাকবে।</small>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="owner">GitHub Username / Owner:</label>
+          <input type="text" id="owner" placeholder=" e.g. your-username">
+        </div>
+        <div class="form-group">
+          <label for="repo">Repository Name:</label>
+          <input type="text" id="repo" placeholder="e.g. my-crud-app">
+        </div>
+      </div>
+    </div>
+
+    <!-- Data CRUD Card -->
+    <div class="card">
+      <h3>📁 File & Data Operations</h3>
+      <div class="form-group">
+        <label for="filePath">Filename / Path:</label>
+        <input type="text" id="filePath" placeholder="data/user_1.json">
+      </div>
+      <div class="form-group">
+        <label for="content">File Content (JSON or Text):</label>
+        <textarea id="content" rows="6" placeholder='{\n  "id": 1,\n  "name": "John Doe",\n  "role": "Developer"\n}'></textarea>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-create" onclick="createFile()">Create File</button>
+        <button class="btn btn-read" onclick="readFile()">Read File</button>
+        <button class="btn btn-update" onclick="updateFile()">Update File</button>
+        <button class="btn btn-delete" onclick="deleteFile()">Delete File</button>
+      </div>
+    </div>
+
+    <!-- Output Logs -->
+    <div class="card">
+      <h3>📊 Console Output</h3>
+      <pre id="output">অপেক্ষমান...</pre>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
