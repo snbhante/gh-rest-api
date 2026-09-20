@@ -1,15 +1,116 @@
-// প্রতি ফাইলে সর্বোচ্চ কয়টি এন্ট্রি রাখা হবে
-const MAX_ITEMS_PER_FILE = 5; 
-const DATA_FOLDER = 'db_data';
+const MAX_ITEMS_PER_FILE = 500; 
+const DATA_FOLDER = 'data';
+const PAGE_SIZE = 10;
 
-// সিস্টেমে মেসেজ দেখানোর ফাংশন
+let rawAllFiles = [];       
+let globalFlatItems = [];   
+let filteredItems = [];     
+let currentPage = 1;
+let currentSortDir = 'asc';
+
+// Page Load Setup
+window.addEventListener('DOMContentLoaded', () => {
+  loadSavedConfig();
+  initTheme();
+});
+
 function log(msg, isError = false) {
   const logEl = document.getElementById('logOutput');
   const time = new Date().toLocaleTimeString();
   logEl.innerText = `[${time}] ${isError ? '❌ ERROR:' : '✅ SUCCESS:'} ${msg}\n` + logEl.innerText;
 }
 
-// ইনপুট ভ্যালুসমূহ পাওয়া
+/* ==================================================
+   🌙 DARK MODE & CONFIG LOCALSTORAGE
+================================================== */
+function toggleDarkMode() {
+  document.body.classList.toggle('dark-mode');
+  const isDark = document.body.classList.contains('dark-mode');
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  document.getElementById('themeBtn').innerText = isDark ? '☀️ লাইট মোড' : '🌙 ডার্ক মোড';
+}
+
+function initTheme() {
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+    document.getElementById('themeBtn').innerText = '☀️ লাইট মোড';
+  }
+}
+
+function loadSavedConfig() {
+  const savedToken = localStorage.getItem('gh_token');
+  const savedOwner = localStorage.getItem('gh_owner');
+  const savedRepo = localStorage.getItem('gh_repo');
+
+  if (savedToken && savedOwner && savedRepo) {
+    document.getElementById('token').value = savedToken;
+    document.getElementById('owner').value = savedOwner;
+    document.getElementById('repo').value = savedRepo;
+    document.getElementById('rememberConfig').checked = true;
+  }
+}
+
+function saveConfigIfNeeded() {
+  const remember = document.getElementById('rememberConfig').checked;
+  const { token, owner, repo } = getConfig();
+
+  if (remember) {
+    localStorage.setItem('gh_token', token);
+    localStorage.setItem('gh_owner', owner);
+    localStorage.setItem('gh_repo', repo);
+  } else {
+    localStorage.removeItem('gh_token');
+    localStorage.removeItem('gh_owner');
+    localStorage.removeItem('gh_repo');
+  }
+}
+
+/* ==================================================
+   🎨 CUSTOM DROPDOWN LOGIC
+================================================== */
+function toggleDropdown(dropdownId) {
+  const dropdown = document.getElementById(dropdownId);
+  const isOpen = dropdown.classList.contains('active');
+  document.querySelectorAll('.custom-dropdown').forEach(d => d.classList.remove('active'));
+  if (!isOpen) dropdown.classList.add('active');
+}
+
+function selectOption(dropdownId, value, labelText) {
+  const dropdown = document.getElementById(dropdownId);
+  const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+  const selectedText = dropdown.querySelector('.selected-text');
+
+  hiddenInput.value = value;
+  selectedText.innerText = labelText;
+
+  dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+    item.classList.remove('selected');
+    if (item.getAttribute('data-value') === value) item.classList.add('selected');
+  });
+
+  dropdown.classList.remove('active');
+}
+
+// ফিল্টারের ড্রপডাউন সিলেক্ট করলে ডাটা ফিল্টার হওয়া
+function selectFilterOption(dropdownId, value, labelText) {
+  selectOption(dropdownId, value, labelText);
+  applyFilters();
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.custom-dropdown')) {
+    document.querySelectorAll('.custom-dropdown').forEach(d => d.classList.remove('active'));
+  }
+});
+
+function resetCustomDropdowns() {
+  selectOption('dropdownLanguage', '', 'ভাষা নির্বাচন করুন');
+  selectOption('dropdownStatus', '', 'স্ট্যাটাস নির্বাচন করুন');
+}
+
+/* ==================================================
+   GITHUB DB API LOGIC
+================================================== */
 function getConfig() {
   return {
     token: document.getElementById('token').value.trim(),
@@ -18,21 +119,11 @@ function getConfig() {
   };
 }
 
-// Helper Functions for Unicode Base64
-function toBase64(str) {
-  return btoa(unescape(encodeURIComponent(str)));
-}
+function toBase64(str) { return btoa(unescape(encodeURIComponent(str))); }
+function fromBase64(str) { return decodeURIComponent(escape(atob(str))); }
 
-function fromBase64(str) {
-  return decodeURIComponent(escape(atob(str)));
-}
-
-// -----------------------------------------------------------------
-// ১. GitHub API-তে ফাইল ক্রিয়েট/আপডেট ফাংশন
-// -----------------------------------------------------------------
 async function saveFileToGithub(filePath, contentArray, sha = null) {
   const { token, owner, repo } = getConfig();
-  
   const body = {
     message: `Database updated: ${filePath}`,
     content: toBase64(JSON.stringify(contentArray, null, 2))
@@ -52,24 +143,19 @@ async function saveFileToGithub(filePath, contentArray, sha = null) {
   return await res.json();
 }
 
-// -----------------------------------------------------------------
-// ২. সব ফাইল ডাইনামিকালি স্ক্যান ও ফেচ করা (READ)
-// -----------------------------------------------------------------
 async function fetchAllFiles() {
   const { token, owner, repo } = getConfig();
   let fileIndex = 1;
   let allFilesData = [];
 
   while (true) {
-    const filePath = `${DATA_FOLDER}/data_${fileIndex}.json`;
+    const filePath = `${DATA_FOLDER}/names_${fileIndex}.json`;
     try {
       const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (res.status === 404) {
-        break; // আর কোনো নতুন ফাইল নেই
-      }
+      if (res.status === 404) break;
 
       const data = await res.json();
       if (res.ok) {
@@ -92,7 +178,6 @@ async function fetchAllFiles() {
   return allFilesData;
 }
 
-// UI-তে ডাটা রেন্ডার করা
 async function loadAllData() {
   const { token, owner, repo } = getConfig();
   if (!token || !owner || !repo) {
@@ -100,125 +185,222 @@ async function loadAllData() {
     return;
   }
 
+  saveConfigIfNeeded();
   log("সবগুলো ডেটাবেজ ফাইল লোড করা হচ্ছে...");
-  const files = await fetchAllFiles();
-  const tableBody = document.getElementById('dataTable');
-  tableBody.innerHTML = '';
 
-  let totalRecords = 0;
+  rawAllFiles = await fetchAllFiles();
+  globalFlatItems = [];
 
-  files.forEach(file => {
+  rawAllFiles.forEach(file => {
     file.items.forEach((item, index) => {
-      totalRecords++;
-      
-      // টিক চিহ্ন নির্বাচন
-      let statusIcon = '➖';
-      if (item.status === 'kept') {
-        statusIcon = '<span class="status-icon status-kept" title="রেখে দেওয়া হয়েছে">✔</span>';
-      } else if (item.status === 'selected') {
-        statusIcon = '<span class="status-icon status-selected" title="পছন্দ করা হয়েছে">✔</span>';
-      }
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${statusIcon}</td>
-        <td><strong>${item.name}</strong></td>
-        <td>${item.meaning}</td>
-        <td>${item.category}</td>
-        <td><small>${file.fileName}</small></td>
-        <td>
-          <button class="btn btn-yellow" onclick="setupEdit('${file.fileName}', ${index}, '${item.name}', '${item.meaning}', '${item.category}', '${item.status}')">এডিট</button>
-          <button class="btn btn-red" onclick="deleteItem('${file.fileName}', ${index})">ডিলিট</button>
-        </td>
-      `;
-      tableBody.appendChild(tr);
+      globalFlatItems.push({
+        ...item,
+        _fileName: file.fileName,
+        _indexInFile: index
+      });
     });
   });
 
-  if (totalRecords === 0) {
-    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">কোনো ডেটা পাওয়া যায়নি। প্রথম নাম যোগ করুন।</td></tr>`;
-  }
-
-  log(`মোট ${files.length} টি ফাইল থেকে ${totalRecords} টি রেকর্ড লোড হয়েছে।`);
+  updateAnalytics(globalFlatItems, rawAllFiles.length);
+  applyFilters();
+  log(`মোট ${rawAllFiles.length} টি ফাইল থেকে ${globalFlatItems.length} টি রেকর্ড লোড হয়েছে।`);
 }
 
-// -----------------------------------------------------------------
-// ৩. নতুন নাম যোগ করা (CREATE) - ডাইনামিক ফাইল হ্যান্ডলিং সহ
-// -----------------------------------------------------------------
+/* ==================================================
+   ANALITYCS, FILTERS, SEARCH & PAGINATION
+================================================== */
+function updateAnalytics(items, totalFiles) {
+  document.getElementById('statTotal').innerText = items.length;
+  document.getElementById('statSelected').innerText = items.filter(i => i.status === 'selected').length;
+  document.getElementById('statKept').innerText = items.filter(i => i.status === 'kept').length;
+  document.getElementById('statFiles').innerText = totalFiles;
+}
+
+function applyFilters() {
+  const searchValue = document.getElementById('searchInput').value.toLowerCase().trim();
+  const categoryValue = document.getElementById('filterCategoryVal').value;
+  const statusValue = document.getElementById('filterStatusVal').value;
+
+  filteredItems = globalFlatItems.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchValue) || 
+                          item.meaning.toLowerCase().includes(searchValue);
+    const matchesCategory = categoryValue === "" || item.category === categoryValue;
+    const matchesStatus = statusValue === "" || item.status === statusValue;
+
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
+  currentPage = 1;
+  renderTablePage();
+}
+
+function toggleSort(field) {
+  currentSortDir = (currentSortDir === 'asc') ? 'desc' : 'asc';
+  document.getElementById('sortNameIcon').innerText = (currentSortDir === 'asc') ? '▲' : '▼';
+
+  filteredItems.sort((a, b) => {
+    return currentSortDir === 'asc' 
+      ? a.name.localeCompare(b.name, 'bn')
+      : b.name.localeCompare(a.name, 'bn');
+  });
+
+  renderTablePage();
+}
+
+function renderTablePage() {
+  const tableBody = document.getElementById('dataTable');
+  tableBody.innerHTML = '';
+
+  const totalPages = Math.ceil(filteredItems.length / PAGE_SIZE) || 1;
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = filteredItems.slice(startIndex, startIndex + PAGE_SIZE);
+
+  pageItems.forEach(item => {
+    let statusIcon = '➖';
+    if (item.status === 'kept') {
+      statusIcon = '<span class="status-icon status-kept-color" title="রেখে দেওয়া হয়েছে">✔</span>';
+    } else if (item.status === 'selected') {
+      statusIcon = '<span class="status-icon status-selected-color" title="পছন্দ করা হয়েছে">✔</span>';
+    } else {
+      statusIcon = '<span style="color:#ccc;">—</span>';
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="sticky-col-left">${statusIcon}</td>
+      <td><strong>${item.name}</strong></td>
+      <td>${item.meaning}</td>
+      <td>${item.category}</td>
+      <td class="sticky-col-right">
+        <div class="btn-action-group">
+          <button class="btn btn-yellow btn-sm" onclick="setupEdit('${item._fileName}', ${item._indexInFile}, '${item.name}', '${item.meaning}', '${item.category}', '${item.status}')" title="এডিট করুন">
+            <span>✏️</span><span class="btn-text">এডিট</span>
+          </button>
+          <button class="btn btn-red btn-sm" onclick="deleteItem('${item._fileName}', ${item._indexInFile})" title="ডিলিট করুন">
+            <span>🗑️</span><span class="btn-text">ডিলিট</span>
+          </button>
+        </div>
+      </td>
+    `;
+    tableBody.appendChild(tr);
+  });
+
+  if (filteredItems.length === 0) {
+    tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">কোনো মিল পাওয়া যায়নি।</td></tr>`;
+  }
+
+  document.getElementById('pageInfo').innerText = `পৃষ্ঠা ${currentPage} এর ${totalPages}`;
+  document.getElementById('btnPrevPage').disabled = (currentPage === 1);
+  document.getElementById('btnNextPage').disabled = (currentPage >= totalPages);
+}
+
+function changePage(direction) {
+  currentPage += direction;
+  renderTablePage();
+}
+
+/* ==================================================
+   SAVE & EDIT LOGIC
+================================================== */
 async function handleSave(e) {
   e.preventDefault();
+
+  const nameInput = document.getElementById('babyName').value.trim();
+  const meaningInput = document.getElementById('babyMeaning').value.trim();
+  const categoryInput = document.getElementById('babyCategory').value;
+
+  if (!nameInput || !meaningInput || !categoryInput) {
+    alert("অনুগ্রহ করে নাম, অর্থ এবং ভাষা নির্বাচন করুন।");
+    return;
+  }
+
   const editFile = document.getElementById('editFile').value;
   const editIndex = document.getElementById('editIndex').value;
 
-  const newItem = {
-    id: Date.now(),
-    name: document.getElementById('babyName').value.trim(),
-    meaning: document.getElementById('babyMeaning').value.trim(),
-    category: document.getElementById('babyCategory').value,
-    status: document.getElementById('babyStatus').value
-  };
-
-  if (editFile !== "") {
-    // এটি এডিট অপারেশন
-    await updateItemInFile(editFile, parseInt(editIndex), newItem);
-  } else {
-    // এটি নতুন ক্রিয়েট অপারেশন
-    await insertNewItem(newItem);
+  if (editFile === "") {
+    const isDuplicate = globalFlatItems.some(item => item.name.toLowerCase() === nameInput.toLowerCase());
+    if (isDuplicate) {
+      if (!confirm(`"${nameInput}" নাম টি ডাটাবেজে আগে থেকেই আছে! আপনি কি নিশ্চিত পুনরায় যোগ করতে চান?`)) {
+        return;
+      }
+    }
   }
 
-  // ফর্ম রিসেট
-  document.getElementById('nameForm').reset();
-  document.getElementById('editFile').value = "";
-  document.getElementById('editIndex').value = "";
-  document.getElementById('saveBtn').innerText = "সংরক্ষণ করুন";
-  
-  loadAllData();
+  const newItem = {
+    id: Date.now(),
+    name: nameInput,
+    meaning: meaningInput,
+    category: categoryInput,
+    status: document.getElementById('babyStatus').value || 'none'
+  };
+
+  const saveBtn = document.getElementById('saveBtn');
+  const originalBtnText = saveBtn.innerText;
+  saveBtn.innerText = "সংরক্ষণ হচ্ছে...";
+  saveBtn.disabled = true;
+
+  try {
+    if (editFile !== "") {
+      await updateItemInFile(editFile, parseInt(editIndex), newItem);
+    } else {
+      await insertNewItem(newItem);
+    }
+
+    document.getElementById('nameForm').reset();
+    resetCustomDropdowns();
+    document.getElementById('editFile').value = "";
+    document.getElementById('editIndex').value = "";
+    saveBtn.innerText = "সংরক্ষণ করুন";
+    
+    await loadAllData();
+  } catch (err) {
+    log("ডাটা সংরক্ষণ করতে সমস্যা হয়েছে: " + err.message, true);
+    saveBtn.innerText = originalBtnText;
+  } finally {
+    saveBtn.disabled = false;
+  }
 }
 
 async function insertNewItem(newItem) {
-  log("নতুন ডেটা সেভ করার জায়গা খোঁজা হচ্ছে...");
-  const files = await fetchAllFiles();
-
-  if (files.length === 0) {
-    // প্রথমবার কোনো ফাইলই নেই, data_1.json তৈরি করা হচ্ছে
-    const firstFilePath = `${DATA_FOLDER}/data_1.json`;
-    log(`প্রথম ফাইল তৈরি করা হচ্ছে: ${firstFilePath}`);
+  log("নতুন ডেটা সেভ করার উপযুক্ত ফাইল খোঁজা হচ্ছে...");
+  if (rawAllFiles.length === 0) {
+    const firstFilePath = `${DATA_FOLDER}/names_1.json`;
+    log(`প্রথম ডাইনামিক ফাইল তৈরি হচ্ছে: ${firstFilePath}`);
     await saveFileToGithub(firstFilePath, [newItem]);
   } else {
-    // শেষ ফাইলটিতে জায়গা আছে কিনা তা পরীক্ষা করা
-    const lastFile = files[files.length - 1];
-
+    const lastFile = rawAllFiles[rawAllFiles.length - 1];
     if (lastFile.items.length < MAX_ITEMS_PER_FILE) {
-      // শেষ ফাইলেই নতুন ডেটা যুক্ত করা যাবে
       lastFile.items.push(newItem);
-      log(`বিদ্যমান ফাইলে (${lastFile.fileName}) ডেটা যুক্ত হচ্ছে...`);
+      log(`বিদ্যমান ফাইলে (${lastFile.fileName}) যুক্ত হচ্ছে...`);
       await saveFileToGithub(lastFile.fileName, lastFile.items, lastFile.sha);
     } else {
-      // ফাইল ফুল হয়ে গেছে! ডাইনামিকালি নতুন ফাইল (যেমন data_2.json) তৈরি করা হবে
       const newFileNumber = lastFile.fileNumber + 1;
-      const newFilePath = `${DATA_FOLDER}/data_${newFileNumber}.json`;
-      log(`ফাইল সীমা অতিক্রম করায় নতুন ফাইল খোলা হচ্ছে: ${newFilePath}`);
+      const newFilePath = `${DATA_FOLDER}/names_${newFileNumber}.json`;
+      log(`সীমা অতিক্রম করায় নতুন ফাইল খোলা হচ্ছে: ${newFilePath}`);
       await saveFileToGithub(newFilePath, [newItem]);
     }
   }
 }
 
-// -----------------------------------------------------------------
-// ৪. ফাইল থেকে ডেটা এডিট ও আপডেট করা (UPDATE)
-// -----------------------------------------------------------------
 function setupEdit(fileName, index, name, meaning, category, status) {
   document.getElementById('editFile').value = fileName;
   document.getElementById('editIndex').value = index;
   document.getElementById('babyName').value = name;
   document.getElementById('babyMeaning').value = meaning;
-  document.getElementById('babyCategory').value = category;
-  document.getElementById('babyStatus').value = status;
 
+  selectOption('dropdownLanguage', category, category || 'ভাষা নির্বাচন করুন');
+  
+  let statusText = 'স্ট্যাটাস নির্বাচন করুন';
+  if (status === 'kept') statusText = 'রেখে দেওয়া হয়েছে';
+  else if (status === 'selected') statusText = 'পছন্দ করা হয়েছে';
+  else if (status === 'none') statusText = 'কোনোটিই নয়';
+  
+  selectOption('dropdownStatus', status, statusText);
   document.getElementById('saveBtn').innerText = "আপডেট সম্পন্ন করুন";
 }
 
 async function updateItemInFile(fileName, index, updatedItem) {
-  log(`${fileName} ফাইল আপডেট করা হচ্ছে...`);
+  log(`${fileName} আপডেট করা হচ্ছে...`);
   const { token, owner, repo } = getConfig();
 
   const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`, {
@@ -227,19 +409,15 @@ async function updateItemInFile(fileName, index, updatedItem) {
   const data = await res.json();
   const items = JSON.parse(fromBase64(data.content));
 
-  items[index] = updatedItem; // আপডেট করা হলো
-
+  items[index] = updatedItem;
   await saveFileToGithub(fileName, items, data.sha);
   log(`সফলভাবে আপডেট করা হয়েছে!`);
 }
 
-// -----------------------------------------------------------------
-// ৫. ফাইল থেকে ডেটা ডিলিট করা (DELETE)
-// -----------------------------------------------------------------
 async function deleteItem(fileName, index) {
   if (!confirm("আপনি কি নিশ্চিত যে এই নাম টি মুছে ফেলতে চান?")) return;
 
-  log(`${fileName} থেকে ডেটা মুছে ফেলা হচ্ছে...`);
+  log(`${fileName} থেকে ডাটা মোছা হচ্ছে...`);
   const { token, owner, repo } = getConfig();
 
   const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${fileName}`, {
@@ -248,9 +426,50 @@ async function deleteItem(fileName, index) {
   const data = await res.json();
   let items = JSON.parse(fromBase64(data.content));
 
-  items.splice(index, 1); // আইটেমটি বাদ দেওয়া হলো
+  items.splice(index, 1);
 
   await saveFileToGithub(fileName, items, data.sha);
   log(`আইটেম মুছে ফেলা হয়েছে!`);
   loadAllData();
+}
+
+/* ==================================================
+   EXPORT TO CSV & JSON
+================================================== */
+function exportToCSV() {
+  if (globalFlatItems.length === 0) {
+    alert("ডাউনলোড করার মতো কোনো ডাটা নেই!");
+    return;
+  }
+
+  let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+  csvContent += "নাম,অর্থ,ভাষা,স্ট্যাটাস\n";
+
+  globalFlatItems.forEach(i => {
+    csvContent += `"${i.name}","${i.meaning}","${i.category}","${i.status}"\n`;
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `baby_names_backup_${Date.now()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function exportToJSON() {
+  if (globalFlatItems.length === 0) {
+    alert("ডাউনলোড করার মতো কোনো ডাটা নেই!");
+    return;
+  }
+
+  const cleanData = globalFlatItems.map(({ _fileName, _indexInFile, ...rest }) => rest);
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cleanData, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `baby_names_db_${Date.now()}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
 }
