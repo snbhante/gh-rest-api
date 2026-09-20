@@ -9,7 +9,7 @@
   --log-bg: #272c34;
   --log-text: #abb2bf;
   --header-bg: #ffffff;
-  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 body.dark-mode {
@@ -23,7 +23,7 @@ body.dark-mode {
   --log-bg: #0d0d0d;
   --log-text: #00ff66;
   --header-bg: #1e1e1e;
-  --shadow: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -31,7 +31,9 @@ body.dark-mode {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 body {
@@ -120,8 +122,12 @@ body {
   font-weight: bold;
 }
 
-.status-kept-color { color: #2ecc71; }
-.status-selected-color { color: #3498db; }
+.status-kept-color {
+  color: #2ecc71;
+}
+.status-selected-color {
+  color: #3498db;
+}
 
 /* 🃏 Card Styling */
 .card {
@@ -177,7 +183,8 @@ body {
   user-select: none;
 }
 
-input[type="text"], input[type="password"] {
+input[type="text"],
+input[type="password"] {
   flex: 1;
   padding: 10px;
   border: 1px solid var(--input-border);
@@ -286,12 +293,28 @@ input[type="text"], input[type="password"] {
   font-size: 14px;
 }
 
-.btn-blue { background-color: #3498db; }
-.btn-green { background-color: #2ecc71; }
-.btn-red { background-color: #e74c3c; }
-.btn-yellow { background-color: #f1c40f; color: #333; }
-.btn-outline { background: transparent; border: 1px solid #3498db; color: #3498db; }
-.btn-outline:hover { background: #3498db; color: #fff; }
+.btn-blue {
+  background-color: #3498db;
+}
+.btn-green {
+  background-color: #2ecc71;
+}
+.btn-red {
+  background-color: #e74c3c;
+}
+.btn-yellow {
+  background-color: #f1c40f;
+  color: #333;
+}
+.btn-outline {
+  background: transparent;
+  border: 1px solid #3498db;
+  color: #3498db;
+}
+.btn-outline:hover {
+  background: #3498db;
+  color: #fff;
+}
 
 .btn:disabled {
   opacity: 0.5;
@@ -344,7 +367,8 @@ table {
   border-spacing: 0;
 }
 
-th, td {
+th,
+td {
   padding: 12px;
   text-align: left;
   font-size: 14px;
@@ -376,7 +400,8 @@ th {
   text-align: center;
 }
 
-th.sticky-col-left, th.sticky-col-right {
+th.sticky-col-left,
+th.sticky-col-right {
   background-color: var(--table-header-bg);
   z-index: 3;
 }
@@ -405,7 +430,7 @@ th.sticky-col-left, th.sticky-col-right {
   .btn-text {
     display: none; /* মোবাইল স্ক্রিনে লেখা লুকিয়ে ফেলে কেবল আইকন দেখাবে */
   }
-  
+
   .btn-action-group .btn-sm {
     padding: 6px 8px;
   }

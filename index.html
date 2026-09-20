@@ -1,207 +1,443 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="bn">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GitHub File-based Dynamic Database System</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-  <!-- Top Sticky Header Bar -->
-  <header class="top-sticky-header">
-    <div class="brand-logo">
-      <span class="logo-icon">👶</span>
-      <h2 class="brand-name">নবজাতকের নাম ও অর্থ</h2>
-    </div>
-    <button onclick="toggleDarkMode()" class="btn btn-dark-mode" id="themeBtn">🌙 ডার্ক মোড</button>
-  </header>
-
-  <div class="container">
-    
-    <!-- Analytics Dashboard Cards -->
-    <div class="dashboard-grid">
-      <div class="dash-card">
-        <span class="dash-title">মোট নাম</span>
-        <span class="dash-value" id="statTotal">0</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub File-based Dynamic Database System</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Top Sticky Header Bar -->
+    <header class="top-sticky-header">
+      <div class="brand-logo">
+        <span class="logo-icon">👶</span>
+        <h2 class="brand-name">নবজাতকের নাম ও অর্থ</h2>
       </div>
-      <div class="dash-card">
-        <span class="dash-title">মোট ফাইল</span>
-        <span class="dash-value" id="statFiles">0</span>
-      </div>
-      <div class="dash-card">
-        <span class="dash-title">পছন্দ করা হয়েছে</span>
-        <span class="dash-value status-selected-color" id="statSelected">0</span>
-      </div>
-      <div class="dash-card">
-        <span class="dash-title">রেখে দেওয়া হয়েছে</span>
-        <span class="dash-value status-kept-color" id="statKept">0</span>
-      </div>
-    </div>
+      <button
+        onclick="toggleDarkMode()"
+        class="btn btn-dark-mode"
+        id="themeBtn"
+      >
+        🌙 ডার্ক মোড
+      </button>
+    </header>
 
-    <!-- Configuration Card -->
-    <div class="card">
-      <h3>🔑 GitHub Configuration</h3>
-      
-      <div class="form-row">
-        <input type="password" id="token" placeholder="Personal Access Token (PAT)" class="full-width-input" required>
-      </div>
-      
-      <div class="form-row" style="flex-wrap: nowrap;">
-        <input type="text" id="owner" placeholder="GitHub Username" style="flex: 1 1 0%; min-width: 0;" required>
-        <input type="text" id="repo" placeholder="Repository Name" style="flex: 1 1 0%; min-width: 0;" required>
-      </div>
-
-      <div class="form-row remember-row">
-        <label class="checkbox-container">
-          <input type="checkbox" id="rememberConfig">
-          <span class="checkmark"></span>
-          তথ্যসমূহ লোকাল স্টোরেজে সেভ রাখুন (Remember Config)
-        </label>
-      </div>
-
-      <button onclick="loadAllData()" class="btn btn-blue full-width-input" style="margin-top: 5px;">ডেটা রিফ্রেশ/লোড করুন</button>
-    </div>
-
-    <!-- Data Entry Form -->
-    <div class="card">
-      <h3>➕ নতুন নাম যোগ করুন / এডিট করুন</h3>
-      <form id="nameForm" onsubmit="handleSave(event)">
-        <input type="hidden" id="editIndex">
-        <input type="hidden" id="editFile">
-        
-        <div class="form-row" style="flex-wrap: nowrap;">
-          <!-- ভাষা নির্বাচন ড্রপডাউন -->
-          <div class="custom-dropdown" id="dropdownLanguage">
-            <input type="hidden" id="babyCategory" required>
-            <div class="dropdown-btn" onclick="toggleDropdown('dropdownLanguage')">
-              <span class="selected-text">ভাষা নির্বাচন করুন</span>
-              <span class="arrow">▼</span>
-            </div>
-            <div class="dropdown-menu">
-              <div class="dropdown-item" data-value="বাংলা" onclick="selectOption('dropdownLanguage', 'বাংলা', 'বাংলা')">বাংলা</div>
-              <div class="dropdown-item" data-value="ইংরেজি" onclick="selectOption('dropdownLanguage', 'ইংরেজি', 'ইংরেজি')">ইংরেজি</div>
-              <div class="dropdown-item" data-value="চাকমা" onclick="selectOption('dropdownLanguage', 'চাকমা', 'চাকমা')">চাকমা</div>
-              <div class="dropdown-item" data-value="পালি" onclick="selectOption('dropdownLanguage', 'পালি', 'পালি')">পালি</div>
-            </div>
-          </div>
-
-          <!-- স্ট্যাটাস নির্বাচন ড্রপডাউন -->
-          <div class="custom-dropdown" id="dropdownStatus">
-            <input type="hidden" id="babyStatus">
-            <div class="dropdown-btn" onclick="toggleDropdown('dropdownStatus')">
-              <span class="selected-text">স্ট্যাটাস নির্বাচন করুন</span>
-              <span class="arrow">▼</span>
-            </div>
-            <div class="dropdown-menu">
-              <div class="dropdown-item" data-value="none" onclick="selectOption('dropdownStatus', 'none', 'কোনোটিই নয়')">কোনোটিই নয়</div>
-              <div class="dropdown-item" data-value="selected" onclick="selectOption('dropdownStatus', 'selected', 'পছন্দ করা হয়েছে')">পছন্দ করা হয়েছে</div>
-              <div class="dropdown-item" data-value="kept" onclick="selectOption('dropdownStatus', 'kept', 'রেখে দেওয়া হয়েছে')">রেখে দেওয়া হয়েছে</div>
-            </div>
-          </div>
+    <div class="container">
+      <!-- Analytics Dashboard Cards -->
+      <div class="dashboard-grid">
+        <div class="dash-card">
+          <span class="dash-title">মোট নাম</span>
+          <span class="dash-value" id="statTotal">0</span>
         </div>
+        <div class="dash-card">
+          <span class="dash-title">মোট ফাইল</span>
+          <span class="dash-value" id="statFiles">0</span>
+        </div>
+        <div class="dash-card">
+          <span class="dash-title">পছন্দ করা হয়েছে</span>
+          <span class="dash-value status-selected-color" id="statSelected"
+            >0</span
+          >
+        </div>
+        <div class="dash-card">
+          <span class="dash-title">রেখে দেওয়া হয়েছে</span>
+          <span class="dash-value status-kept-color" id="statKept">0</span>
+        </div>
+      </div>
+
+      <!-- Configuration Card -->
+      <div class="card">
+        <h3>🔑 GitHub Configuration</h3>
 
         <div class="form-row">
-          <input type="text" id="babyName" placeholder="নাম" class="full-width-input" required>
+          <input
+            type="password"
+            id="token"
+            placeholder="Personal Access Token (PAT)"
+            class="full-width-input"
+            required
+          />
         </div>
 
-        <div class="form-row">
-          <input type="text" id="babyMeaning" placeholder="অর্থ" class="full-width-input" required>
+        <div class="form-row" style="flex-wrap: nowrap">
+          <input
+            type="text"
+            id="owner"
+            placeholder="GitHub Username"
+            style="flex: 1 1 0%; min-width: 0"
+            required
+          />
+          <input
+            type="text"
+            id="repo"
+            placeholder="Repository Name"
+            style="flex: 1 1 0%; min-width: 0"
+            required
+          />
         </div>
 
-        <div class="form-row btn-container">
-          <button type="submit" id="saveBtn" class="btn btn-green full-width-input">সংরক্ষণ করুন</button>
+        <div class="form-row remember-row">
+          <label class="checkbox-container">
+            <input type="checkbox" id="rememberConfig" />
+            <span class="checkmark"></span>
+            তথ্যসমূহ লোকাল স্টোরেজে সেভ রাখুন (Remember Config)
+          </label>
         </div>
-      </form>
-    </div>
 
-    <!-- Data Display & Search Table -->
-    <div class="card">
-      <div class="card-header-flex">
-        <h3>📋 সংরক্ষিত নামের তালিকা</h3>
-        <div class="export-btns">
-          <button onclick="exportToCSV()" class="btn btn-sm btn-outline">📥 CSV Export</button>
-          <button onclick="exportToJSON()" class="btn btn-sm btn-outline">📥 JSON Backup</button>
-        </div>
+        <button
+          onclick="loadAllData()"
+          class="btn btn-blue full-width-input"
+          style="margin-top: 5px"
+        >
+          ডেটা রিফ্রেশ/লোড করুন
+        </button>
       </div>
 
-      <!-- Live Search & Custom Filter Controls -->
-      <div class="filter-container">
-        <!-- ১. সার্চ ইনপুট (ফুল উইডথ) -->
-        <div class="search-row">
-          <input type="text" id="searchInput" oninput="applyFilters()" placeholder="🔍 নাম বা অর্থ দিয়ে খুঁজুন..." class="search-input">
-        </div>
-        
-        <!-- ২. ফিল্টার / সর্টিং ড্রপডাউন মেনু (এক রোতে দুটি) -->
-        <div class="filter-dropdown-row">
-          <!-- ফিল্টার: ভাষা কাস্টম ড্রপডাউন -->
-          <div class="custom-dropdown filter-dropdown" id="filterDropdownLang">
-            <input type="hidden" id="filterCategoryVal" value="">
-            <div class="dropdown-btn" onclick="toggleDropdown('filterDropdownLang')">
-              <span class="selected-text">সব ভাষা</span>
-              <span class="arrow">▼</span>
+      <!-- Data Entry Form -->
+      <div class="card">
+        <h3>➕ নতুন নাম যোগ করুন / এডিট করুন</h3>
+        <form id="nameForm" onsubmit="handleSave(event)">
+          <input type="hidden" id="editIndex" />
+          <input type="hidden" id="editFile" />
+
+          <div class="form-row" style="flex-wrap: nowrap">
+            <!-- ভাষা নির্বাচন ড্রপডাউন -->
+            <div class="custom-dropdown" id="dropdownLanguage">
+              <input type="hidden" id="babyCategory" required />
+              <div
+                class="dropdown-btn"
+                onclick="toggleDropdown('dropdownLanguage')"
+              >
+                <span class="selected-text">ভাষা নির্বাচন করুন</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="dropdown-menu">
+                <div
+                  class="dropdown-item"
+                  data-value="বাংলা"
+                  onclick="selectOption('dropdownLanguage', 'বাংলা', 'বাংলা')"
+                >
+                  বাংলা
+                </div>
+                <div
+                  class="dropdown-item"
+                  data-value="ইংরেজি"
+                  onclick="selectOption('dropdownLanguage', 'ইংরেজি', 'ইংরেজি')"
+                >
+                  ইংরেজি
+                </div>
+                <div
+                  class="dropdown-item"
+                  data-value="চাকমা"
+                  onclick="selectOption('dropdownLanguage', 'চাকমা', 'চাকমা')"
+                >
+                  চাকমা
+                </div>
+                <div
+                  class="dropdown-item"
+                  data-value="পালি"
+                  onclick="selectOption('dropdownLanguage', 'পালি', 'পালি')"
+                >
+                  পালি
+                </div>
+              </div>
             </div>
-            <div class="dropdown-menu">
-              <div class="dropdown-item selected" data-value="" onclick="selectFilterOption('filterDropdownLang', '', 'সব ভাষা')">সব ভাষা</div>
-              <div class="dropdown-item" data-value="বাংলা" onclick="selectFilterOption('filterDropdownLang', 'বাংলা', 'বাংলা')">বাংলা</div>
-              <div class="dropdown-item" data-value="ইংরেজি" onclick="selectFilterOption('filterDropdownLang', 'ইংরেজি', 'ইংরেজি')">ইংরেজি</div>
-              <div class="dropdown-item" data-value="চাকমা" onclick="selectFilterOption('filterDropdownLang', 'চাকমা', 'চাকমা')">চাকমা</div>
-              <div class="dropdown-item" data-value="পালি" onclick="selectFilterOption('filterDropdownLang', 'পালি', 'পালি')">পালি</div>
+
+            <!-- স্ট্যাটাস নির্বাচন ড্রপডাউন -->
+            <div class="custom-dropdown" id="dropdownStatus">
+              <input type="hidden" id="babyStatus" />
+              <div
+                class="dropdown-btn"
+                onclick="toggleDropdown('dropdownStatus')"
+              >
+                <span class="selected-text">স্ট্যাটাস নির্বাচন করুন</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="dropdown-menu">
+                <div
+                  class="dropdown-item"
+                  data-value="none"
+                  onclick="selectOption('dropdownStatus', 'none', 'কোনোটিই নয়')"
+                >
+                  কোনোটিই নয়
+                </div>
+                <div
+                  class="dropdown-item"
+                  data-value="selected"
+                  onclick="
+                    selectOption(
+                      'dropdownStatus',
+                      'selected',
+                      'পছন্দ করা হয়েছে',
+                    )
+                  "
+                >
+                  পছন্দ করা হয়েছে
+                </div>
+                <div
+                  class="dropdown-item"
+                  data-value="kept"
+                  onclick="
+                    selectOption('dropdownStatus', 'kept', 'রেখে দেওয়া হয়েছে')
+                  "
+                >
+                  রেখে দেওয়া হয়েছে
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- ফিল্টার: স্ট্যাটাস কাস্টম ড্রপডাউন -->
-          <div class="custom-dropdown filter-dropdown" id="filterDropdownStatus">
-            <input type="hidden" id="filterStatusVal" value="">
-            <div class="dropdown-btn" onclick="toggleDropdown('filterDropdownStatus')">
-              <span class="selected-text">সব স্ট্যাটাস</span>
-              <span class="arrow">▼</span>
+          <div class="form-row">
+            <input
+              type="text"
+              id="babyName"
+              placeholder="নাম"
+              class="full-width-input"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <input
+              type="text"
+              id="babyMeaning"
+              placeholder="অর্থ"
+              class="full-width-input"
+              required
+            />
+          </div>
+
+          <div class="form-row btn-container">
+            <button
+              type="submit"
+              id="saveBtn"
+              class="btn btn-green full-width-input"
+            >
+              সংরক্ষণ করুন
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Data Display & Search Table -->
+      <div class="card">
+        <div class="card-header-flex">
+          <h3>📋 সংরক্ষিত নামের তালিকা</h3>
+          <div class="export-btns">
+            <button onclick="exportToCSV()" class="btn btn-sm btn-outline">
+              📥 CSV Export
+            </button>
+            <button onclick="exportToJSON()" class="btn btn-sm btn-outline">
+              📥 JSON Backup
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Search & Custom Filter Controls -->
+        <div class="filter-container">
+          <!-- ১. সার্চ ইনপুট (ফুল উইডথ) -->
+          <div class="search-row">
+            <input
+              type="text"
+              id="searchInput"
+              oninput="applyFilters()"
+              placeholder="🔍 নাম বা অর্থ দিয়ে খুঁজুন..."
+              class="search-input"
+            />
+          </div>
+
+          <!-- ২. ফিল্টার / সর্টিং ড্রপডাউন মেনু (এক রোতে দুটি) -->
+          <div class="filter-dropdown-row">
+            <!-- ফিল্টার: ভাষা কাস্টম ড্রপডাউন -->
+            <div
+              class="custom-dropdown filter-dropdown"
+              id="filterDropdownLang"
+            >
+              <input type="hidden" id="filterCategoryVal" value="" />
+              <div
+                class="dropdown-btn"
+                onclick="toggleDropdown('filterDropdownLang')"
+              >
+                <span class="selected-text">সব ভাষা</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="dropdown-menu">
+                <div
+                  class="dropdown-item selected"
+                  data-value=""
+                  onclick="
+                    selectFilterOption('filterDropdownLang', '', 'সব ভাষা')
+                  "
+                >
+                  সব ভাষা
+                </div>
+                <div
+                  class="dropdown-item"
+                  data-value="বাংলা"
+                  onclick="
+                    selectFilterOption('filterDropdownLang', 'বাংলা', 'বাংলা')
+                  "
+                >
+                  বাংলা
+                </div>
+                <div
+                  class="dropdown-item"
+                  data-value="ইংরেজি"
+                  onclick="
+                    selectFilterOption('filterDropdownLang', 'ইংরেজি', 'ইংরেজি')
+                  "
+                >
+                  ইংরেজি
+                </div>
+                <div
+                  class="dropdown-item"
+                  data-value="চাকমা"
+                  onclick="
+                    selectFilterOption('filterDropdownLang', 'চাকমা', 'চাকমা')
+                  "
+                >
+                  চাকমা
+                </div>
+                <div
+                  class="dropdown-item"
+                  data-value="পালি"
+                  onclick="
+                    selectFilterOption('filterDropdownLang', 'পালি', 'পালি')
+                  "
+                >
+                  পালি
+                </div>
+              </div>
             </div>
-            <div class="dropdown-menu">
-              <div class="dropdown-item selected" data-value="" onclick="selectFilterOption('filterDropdownStatus', '', 'সব স্ট্যাটাস')">সব স্ট্যাটাস</div>
-              <div class="dropdown-item" data-value="kept" onclick="selectFilterOption('filterDropdownStatus', 'kept', 'রেখে দেওয়া হয়েছে')">রেখে দেওয়া হয়েছে</div>
-              <div class="dropdown-item" data-value="selected" onclick="selectFilterOption('filterDropdownStatus', 'selected', 'পছন্দ করা হয়েছে')">পছন্দ করা হয়েছে</div>
-              <div class="dropdown-item" data-value="none" onclick="selectFilterOption('filterDropdownStatus', 'none', 'কোনোটিই নয়')">কোনোটিই নয়</div>
+
+            <!-- ফিল্টার: স্ট্যাটাস কাস্টম ড্রপডাউন -->
+            <div
+              class="custom-dropdown filter-dropdown"
+              id="filterDropdownStatus"
+            >
+              <input type="hidden" id="filterStatusVal" value="" />
+              <div
+                class="dropdown-btn"
+                onclick="toggleDropdown('filterDropdownStatus')"
+              >
+                <span class="selected-text">সব স্ট্যাটাস</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="dropdown-menu">
+                <div
+                  class="dropdown-item selected"
+                  data-value=""
+                  onclick="
+                    selectFilterOption(
+                      'filterDropdownStatus',
+                      '',
+                      'সব স্ট্যাটাস',
+                    )
+                  "
+                >
+                  সব স্ট্যাটাস
+                </div>
+                <div
+                  class="dropdown-item"
+                  data-value="kept"
+                  onclick="
+                    selectFilterOption(
+                      'filterDropdownStatus',
+                      'kept',
+                      'রেখে দেওয়া হয়েছে',
+                    )
+                  "
+                >
+                  রেখে দেওয়া হয়েছে
+                </div>
+                <div
+                  class="dropdown-item"
+                  data-value="selected"
+                  onclick="
+                    selectFilterOption(
+                      'filterDropdownStatus',
+                      'selected',
+                      'পছন্দ করা হয়েছে',
+                    )
+                  "
+                >
+                  পছন্দ করা হয়েছে
+                </div>
+                <div
+                  class="dropdown-item"
+                  data-value="none"
+                  onclick="
+                    selectFilterOption(
+                      'filterDropdownStatus',
+                      'none',
+                      'কোনোটিই নয়',
+                    )
+                  "
+                >
+                  কোনোটিই নয়
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- Table Structure -->
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th class="sticky-col-left">অবস্থা</th>
+                <th
+                  onclick="toggleSort('name')"
+                  style="cursor: pointer"
+                  title="সর্ট করতে ক্লিক করুন"
+                >
+                  নাম <span id="sortNameIcon">⇅</span>
+                </th>
+                <th>অর্থ</th>
+                <th>ভাষা</th>
+                <th class="sticky-col-right">অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="dataTable">
+              <tr>
+                <td colspan="5" style="text-align: center">
+                  কনফিগারেশন দিয়ে "লোড করুন" বাটনে ক্লিক করুন।
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="pagination-container">
+          <button
+            id="btnPrevPage"
+            onclick="changePage(-1)"
+            class="btn btn-sm btn-blue"
+            disabled
+          >
+            ◄ পূর্ববর্তী
+          </button>
+          <span id="pageInfo">পৃষ্ঠা ১ এর ১</span>
+          <button
+            id="btnNextPage"
+            onclick="changePage(1)"
+            class="btn btn-sm btn-blue"
+            disabled
+          >
+            পরবর্তী ►
+          </button>
+        </div>
       </div>
 
-      <!-- Table Structure -->
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th class="sticky-col-left">অবস্থা</th>
-              <th onclick="toggleSort('name')" style="cursor: pointer;" title="সর্ট করতে ক্লিক করুন">নাম <span id="sortNameIcon">⇅</span></th>
-              <th>অর্থ</th>
-              <th>ভাষা</th>
-              <th class="sticky-col-right">অ্যাকশন</th>
-            </tr>
-          </thead>
-          <tbody id="dataTable">
-            <tr>
-              <td colspan="5" style="text-align:center;">কনফিগারেশন দিয়ে "লোড করুন" বাটনে ক্লিক করুন।</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination Controls -->
-      <div class="pagination-container">
-        <button id="btnPrevPage" onclick="changePage(-1)" class="btn btn-sm btn-blue" disabled>◄ পূর্ববর্তী</button>
-        <span id="pageInfo">পৃষ্ঠা ১ এর ১</span>
-        <button id="btnNextPage" onclick="changePage(1)" class="btn btn-sm btn-blue" disabled>পরবর্তী ►</button>
+      <!-- System Log Output -->
+      <div class="card">
+        <h3>📊 সিস্টেম লগ</h3>
+        <pre id="logOutput">অপেক্ষমান...</pre>
       </div>
     </div>
 
-    <!-- System Log Output -->
-    <div class="card">
-      <h3>📊 সিস্টেম লগ</h3>
-      <pre id="logOutput">অপেক্ষমান...</pre>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>
