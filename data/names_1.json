@@ -60,7 +60,8 @@
     "name": "এগামন",
     "meaning": "-",
     "category": "চাকমা",
-    "status": "kept"
+    "status": "kept",
+    "isDeleted": true
   },
   {
     "id": 1789922739476,
