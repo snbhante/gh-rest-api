@@ -58,7 +58,9 @@
     "name": "শৈলী (Shoilee/Shoily)",
     "meaning": "-",
     "category": "বাংলা",
-    "status": "selected"
+    "gender": "girl",
+    "status": "selected",
+    "isDeleted": false
   },
   {
     "id": 1789921908054,
