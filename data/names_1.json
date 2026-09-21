@@ -31,7 +31,9 @@
     "name": "পারং (Parong)",
     "meaning": "পারা, পারি, সমর্থ, সক্ষম।",
     "category": "চাকমা",
-    "status": "kept"
+    "gender": "boy",
+    "status": "kept",
+    "isDeleted": false
   },
   {
     "id": 1789922826714,
