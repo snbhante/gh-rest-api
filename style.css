@@ -48,7 +48,6 @@ body {
   padding: 0 15px;
 }
 
-/* 📌 Sticky Header Bar */
 .top-sticky-header {
   position: sticky;
   top: 0;
@@ -84,16 +83,29 @@ body {
   color: #fff;
 }
 
-/* 📊 Dashboard Cards Grid */
+@media (max-width: 600px) {
+  .btn-dark-mode .theme-text {
+    display: none;
+  }
+  .btn-dark-mode {
+    padding: 8px 12px;
+  }
+}
+
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* বড় স্ক্রিনে ৪টি এক রোতে */
-  gap: 12px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
   margin-bottom: 20px;
 }
 
-/* মোবাইল ও ছোট স্ক্রিনে ২x২ লেআউট */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -101,7 +113,7 @@ body {
 
 .dash-card {
   background: var(--card-bg);
-  padding: 14px;
+  padding: 12px;
   border-radius: 8px;
   box-shadow: var(--shadow);
   display: flex;
@@ -112,13 +124,13 @@ body {
 }
 
 .dash-title {
-  font-size: 13px;
+  font-size: 12px;
   opacity: 0.85;
   margin-bottom: 4px;
 }
 
 .dash-value {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
 }
 
@@ -129,7 +141,6 @@ body {
   color: #3498db;
 }
 
-/* 🃏 Card Styling */
 .card {
   background: var(--card-bg);
   padding: 18px;
@@ -140,11 +151,13 @@ body {
 }
 
 .card h3 {
+  width: 100%;
   margin-bottom: 12px;
   color: var(--heading-color);
   border-bottom: 2px solid var(--border-color);
-  padding-bottom: 6px;
+  padding-bottom: 8px;
   font-size: 16px;
+  display: block;
 }
 
 .card-header-flex {
@@ -168,7 +181,6 @@ body {
   flex-wrap: wrap;
 }
 
-/* Center Align Remember Checkbox Row */
 .remember-row {
   justify-content: center;
   margin: 10px 0;
@@ -195,7 +207,6 @@ input[type="password"] {
   font-size: 14px;
 }
 
-/* 🎨 DROPDOWN & ELLIPSES LOGIC */
 .custom-dropdown {
   position: relative;
   flex: 1 1 0%;
@@ -217,7 +228,6 @@ input[type="password"] {
   width: 100%;
 }
 
-/* টেক্সট ওভারফ্লো করলে থ্রি ডট (Ellipses) দেখাবে */
 .selected-text {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -321,16 +331,14 @@ input[type="password"] {
   cursor: not-allowed;
 }
 
-/* 🔍 Filters, Search & Spacing */
 .filter-container {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 15px; /* এক্সপোর্ট বাটন ও সার্চ ইনপুটের মধ্যে মার্জিন */
+  margin-top: 15px;
   margin-bottom: 15px;
 }
 
-/* ফুল উইডথ সার্চ ইনপুট রো */
 .search-row {
   width: 100%;
 }
@@ -341,7 +349,6 @@ input[type="password"] {
   font-size: 14px;
 }
 
-/* ফিল্টার ড্রপডাউন রো (এক রোতে দুটি ড্রপডাউন) */
 .filter-dropdown-row {
   display: flex;
   gap: 12px;
@@ -353,7 +360,6 @@ input[type="password"] {
   min-width: 0;
 }
 
-/* 📋 Table Styling */
 .table-container {
   width: 100%;
   overflow-x: auto;
@@ -425,18 +431,15 @@ th.sticky-col-right {
   gap: 4px;
 }
 
-/* 📱 ছোট স্ক্রিনে শুধু আইকন দেখানোর স্টাইল */
 @media (max-width: 600px) {
   .btn-text {
-    display: none; /* মোবাইল স্ক্রিনে লেখা লুকিয়ে ফেলে কেবল আইকন দেখাবে */
+    display: none;
   }
-
   .btn-action-group .btn-sm {
     padding: 6px 8px;
   }
 }
 
-/* Pagination */
 .pagination-container {
   display: flex;
   justify-content: space-between;
@@ -452,4 +455,23 @@ pre {
   overflow-x: auto;
   font-size: 12px;
   max-height: 150px;
+}
+
+/* Modal styling */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  width: 90%;
+  max-width: 500px;
 }
