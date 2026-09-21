@@ -84,7 +84,9 @@
     "name": "ফদাংতাং",
     "meaning": "-",
     "category": "চাকমা",
-    "status": "kept"
+    "gender": "boy",
+    "status": "kept",
+    "isDeleted": false
   },
   {
     "id": 1789922792457,
