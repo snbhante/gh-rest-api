@@ -49,7 +49,9 @@
     "name": "চির শান্তি (Chiro Shanti)",
     "meaning": "-",
     "category": "বাংলা",
-    "status": "none"
+    "gender": "boy",
+    "status": "none",
+    "isDeleted": false
   },
   {
     "id": 1789921830755,
