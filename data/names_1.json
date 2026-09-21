@@ -22,7 +22,9 @@
     "name": "পূজিতা (Pūjita)",
     "meaning": "পূজিত, সম্মানিত—যার প্রতি শ্রদ্ধা, সম্মান বা ভক্তিপূর্ণ সেবা প্রদর্শিত হয়েছে।",
     "category": "পালি",
-    "status": "kept"
+    "gender": "girl",
+    "status": "kept",
+    "isDeleted": false
   },
   {
     "id": 1789921468890,
