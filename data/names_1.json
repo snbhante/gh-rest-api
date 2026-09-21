@@ -93,7 +93,9 @@
     "name": "উদোন্দি",
     "meaning": "-",
     "category": "চাকমা",
-    "status": "kept"
+    "gender": "girl",
+    "status": "kept",
+    "isDeleted": false
   },
   {
     "id": 1789880679829,
